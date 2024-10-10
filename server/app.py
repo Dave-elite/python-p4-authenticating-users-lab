@@ -2,7 +2,7 @@
 
 from flask import Flask, make_response, jsonify, request, session
 from flask_migrate import Migrate
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 
 from models import db, Article, User
 
@@ -47,10 +47,66 @@ class ShowArticle(Resource):
             return make_response(article_json, 200)
 
         return {'message': 'Maximum pageview limit reached'}, 401
+    
+class Login(Resource):
+    def get(self):
+        pass
+        
+    def post(self):
+        user = User.query.filter(
+            User.username == request.get_json()['username']
+        ).first()
+        
+        session['user_id']= user.id
+        return user.to_dict()
+    
+
+    
+class Logout(Resource):
+    
+    def delete(self):
+        session['user_id'] = None
+        return {"message": "204: No content"}, 204
+    
+class CheckSessions(Resource):
+    def get(self):
+        user_id = session.get('user_id')  # Get user_id from the session
+        if user_id:
+            user = User.query.get(user_id)  # Retrieve the user by ID
+            if user:
+                return {
+                    "id": user.id,
+                    "username": user.username
+                }, 200  # Return user info with a 200 status
+        return {}, 401  # Return empty dict for unauthorized access
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 api.add_resource(ClearSession, '/clear')
 api.add_resource(IndexArticle, '/articles')
 api.add_resource(ShowArticle, '/articles/<int:id>')
+api.add_resource(Login, '/login')
+api.add_resource(CheckSessions, '/check_session')
+api.add_resource(Logout, '/logout')
 
 
 if __name__ == '__main__':
